@@ -10,25 +10,25 @@ namespace WebApplication.Controllers
     [Route("api/[controller]")]
     public class PersonController : ControllerBase
     {
-        private static readonly List<Person> Persons = new List<Person>()
+        public static readonly List<Person> Persons = new List<Person>()
         {
             new()
             {
                 Forename = "Petr",
                 Surname = "Krivov",
-                DOB = DateTime.Now
+                DOB = DateTime.Today
             },
             new()
             {
                 Forename = "Max",
                 Surname = "Potapov",
-                DOB = DateTime.Now
+                DOB = DateTime.Today
             },
             new()
             {
                 Forename = "Ivan",
                 Surname = "Kotin",
-                DOB = DateTime.Now
+                DOB = DateTime.Today
             }
         };
 
@@ -57,7 +57,7 @@ namespace WebApplication.Controllers
                 return BadRequest();
 
             Persons.Add(person);
-            return Ok(person);
+            return new ObjectResult(Persons);;
         }
         
         [HttpDelete("{forename}/{surname}")]

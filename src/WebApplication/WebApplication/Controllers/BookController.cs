@@ -10,7 +10,7 @@ namespace WebApplication.Controllers
     [Route("api/[controller]")]
     public class BookController : ControllerBase
     {
-        private static readonly List<Book> Books = new List<Book>()
+        public static readonly List<Book> Books = new List<Book>()
         {
             new()
             {
@@ -51,13 +51,13 @@ namespace WebApplication.Controllers
         }
         
         [HttpPost]
-        public ActionResult<Book> Post(Book book)
+        public ActionResult<IEnumerable<Book>> Post(Book book)
         {
             if (book == null)
                 return BadRequest();
 
             Books.Add(book);
-            return Ok(book);
+            return new ObjectResult(Books);
         }
         
         [HttpDelete("{author}/{title}")]
