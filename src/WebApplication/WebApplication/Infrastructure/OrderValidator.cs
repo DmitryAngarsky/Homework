@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using WebApplication.Controllers;
+using WebApplication.Database;
 using WebApplication.Model;
 
 namespace WebApplication.Infrastructure
@@ -15,11 +16,11 @@ namespace WebApplication.Infrastructure
         
         public bool IsValidOrder()
         {
-            return BookController.Books
+            return SeedData.Books
                        .Any(b => b.Author.Equals(_order.Book.Author)
                                  && b.Genre.Equals(_order.Book.Genre)
                                  && b.Title.Equals(_order.Book.Title))
-                   && PersonController.Persons
+                   && SeedData.Persons
                        .Any(p => p.Forename.Equals(_order.Person.Forename)
                                  && p.Surname.Equals(_order.Person.Surname)
                                  && p.DOB.Equals(_order.Person.DOB));

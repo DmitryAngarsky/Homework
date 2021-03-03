@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication.Database;
 using WebApplication.Model;
 
 namespace WebApplication.Controllers
@@ -10,38 +11,23 @@ namespace WebApplication.Controllers
     [Route("api/[controller]")]
     public class BookController : ControllerBase
     {
-        public static readonly List<Book> Books = new List<Book>()
+        private readonly List<Book> _books;
+
+        public BookController()
         {
-            new()
-            {
-                Title = "Clean Code",
-                Author = "Robert Martin",
-                Genre = "Software Development"
-            },
-            new()
-            {
-                Title = "War and Peace",
-                Author = "Leo Tolstoy",
-                Genre = "Novel"
-            },
-            new()
-            {
-                Title = "1984",
-                Author = "George Orwell",
-                Genre = "Dystopian"
-            }
-        };
+            _books = SeedData.Books;
+        }
         
         [HttpGet]
         public ActionResult<IEnumerable<Book>> Get()
         {
-            return Books;
+            return _books;
         }
 
         [HttpGet("{author}")]
         public ActionResult<IEnumerable<Book>> Get(string author)
         {
-            var books = Books
+            var books = _books
                 .Where(b => string.Equals(b.Author, author, StringComparison.CurrentCultureIgnoreCase));
             
             if (!books.Any())
@@ -53,23 +39,23 @@ namespace WebApplication.Controllers
         [HttpPost]
         public ActionResult<IEnumerable<Book>> Post(Book book)
         {
-            if (book == null)
-                return BadRequest();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            Books.Add(book);
-            return new ObjectResult(Books);
+            _books.Add(book);
+            return new ObjectResult(_books);
         }
         
         [HttpDelete("{author}/{title}")]
         public ActionResult<Book> Delete(string author, string title)
         {
-            Book book = Books
+            Book book = _books
                 .FirstOrDefault(b => string.Equals(b.Author + b.Title, author + title, StringComparison.CurrentCultureIgnoreCase));
             
             if (book == null)
                 return NotFound();
             
-            Books.Remove(book);
+            _books.Remove(book);
             return Ok(book);
         }
     }

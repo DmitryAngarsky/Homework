@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication.Database;
 using WebApplication.Model;
 
 namespace WebApplication.Controllers
@@ -10,38 +11,23 @@ namespace WebApplication.Controllers
     [Route("api/[controller]")]
     public class PersonController : ControllerBase
     {
-        public static readonly List<Person> Persons = new List<Person>()
+        private readonly List<Person> _persons;
+
+        public PersonController()
         {
-            new()
-            {
-                Forename = "Petr",
-                Surname = "Krivov",
-                DOB = DateTime.Today
-            },
-            new()
-            {
-                Forename = "Max",
-                Surname = "Potapov",
-                DOB = DateTime.Today
-            },
-            new()
-            {
-                Forename = "Ivan",
-                Surname = "Kotin",
-                DOB = DateTime.Today
-            }
-        };
+            _persons = SeedData.Persons;
+        }
 
         [HttpGet]
         public ActionResult<IEnumerable<Person>> Get()
         {
-            return Persons;
+            return _persons;
         }
         
         [HttpGet("{forename}")]
         public ActionResult<IEnumerable<Person>> Get(string forename)
         {
-            var persons = Persons
+            var persons = _persons
                 .Where(b => string.Equals(b.Forename, forename, StringComparison.CurrentCultureIgnoreCase));
             
             if (!persons.Any())
@@ -53,23 +39,23 @@ namespace WebApplication.Controllers
         [HttpPost]
         public ActionResult<Person> Post(Person person)
         {
-            if (person == null)
-                return BadRequest();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            Persons.Add(person);
-            return new ObjectResult(Persons);;
+            _persons.Add(person);
+            return new ObjectResult(_persons);;
         }
         
         [HttpDelete("{forename}/{surname}")]
         public ActionResult<Person> Delete(string forename, string surname)
         {
-            Person person = Persons
+            Person person = _persons
                 .FirstOrDefault(b => string.Equals(b.Forename + b.Surname, forename + surname, StringComparison.CurrentCultureIgnoreCase));
             
             if (person == null)
                 return NotFound();
             
-            Persons.Remove(person);
+            _persons.Remove(person);
             return Ok(person);
         }
     }
