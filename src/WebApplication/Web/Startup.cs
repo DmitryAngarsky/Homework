@@ -14,9 +14,7 @@ namespace WebApplication
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            StaticConfig = configuration;
         }
-        public static IConfiguration StaticConfig { get; private set; }
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
