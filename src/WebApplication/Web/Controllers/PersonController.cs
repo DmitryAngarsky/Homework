@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Database.UnitOfWork;
+using Application;
 using Domain;
 using Domain.DTO;
 using Microsoft.AspNetCore.Mvc;
@@ -10,91 +10,68 @@ namespace WebApplication.Controllers
     [Route("api/[controller]")]
     public class PersonController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        
-        public PersonController(IUnitOfWork unitOfWork)
+        private readonly IPersonService _personService;
+        public PersonController(IPersonService personService)
         {
-            _unitOfWork = unitOfWork;
+            _personService = personService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get(int id)
         {
-            var person = await _unitOfWork.Persons.GetByIdAsync(id);
+            var person = await _personService.Get(id);
             return Ok(person);
         }
         
         [HttpGet("person_books/{id}")]
         public async Task<IActionResult> GetPersonBooks(int id)
         {
-            var personBooks = await _unitOfWork.Persons.GetAllPersonBooksAsync(id);
+            var personBooks = await _personService.GetPersonBooks(id);
             return Ok(personBooks);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Person person)
+        public async Task<IActionResult> Add(PersonModel person)
         {
-            var result = await _unitOfWork.Persons.AddAsync(person);
+            var result = await _personService.Add(person);
             return Ok(result);
         }
         
         [HttpPost("update")]
-        public async Task<IActionResult> Update(Person person)
+        public async Task<IActionResult> Update(PersonModel person)
         {
-            var data = await _unitOfWork.Persons.UpdateAsync(person);
+            var data = await _personService.Update(person);
             return Ok(data);
         }
         
         [HttpPost("add_book")]
         public async Task<IActionResult> AddBookInLibraryCard(LibraryCard libraryCard)
         {
-            var libraryCardExist = await _unitOfWork.Persons.GetLibraryCard(libraryCard) != null;
-            if(libraryCardExist)
-                return BadRequest("The person already has this book ");
-            
-            var libraryCardResult = await _unitOfWork.Persons.AddBookInLibraryCard(libraryCard);
-            if(libraryCardResult == 0)
-                return BadRequest("Book dont added");
-
-            var personBooks = await _unitOfWork.Persons.GetPersonBooks(libraryCard.PersonId);
+            var personBooks = await _personService.AddBookInLibraryCard(libraryCard);
             return Ok(personBooks);
         }
         
+        //TODO: Добавить обработку ошибок и возвратить результать.
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deletedRows = await _unitOfWork.Persons.DeleteAsync(id);
-            
-            if (deletedRows == 0)
-                return NotFound("Person no found");
+            await _personService.Delete(id);
 
-            return Ok(deletedRows);
+            return Ok();
         }
         
+        //TODO: Добавить обработку ошибок и возвратить результать.
         [HttpDelete]
-        public async Task<IActionResult> Delete(Person person)
+        public IActionResult Delete(PersonModel person)
         {
-            var deletedRows = await _unitOfWork.Persons.DeleteByNameAsync(person);
-            
-            if (deletedRows == 0)
-                return NotFound("Person no found");
-            
-            return Ok(deletedRows);
+            _personService.Delete(person);
+            return Ok();
         }
         
         [HttpDelete("delete_book")]
         public async Task<IActionResult> DeleteBookInLibraryCard(LibraryCard libraryCard)
         {
-            var libraryCardExist = await _unitOfWork.Persons.GetLibraryCard(libraryCard) != null;
-            
-            if (!libraryCardExist)
-                return BadRequest("The person does not have this book ");
-            
-            var libraryCardResult = await _unitOfWork.Persons.DeleteBookInLibraryCard(libraryCard);
-            if(libraryCardResult == 0)
-                return BadRequest("Book dont deleted");
-
-            var personBooks = await _unitOfWork.Persons.GetPersonBooks(libraryCard.PersonId);
+            var personBooks = await _personService.DeleteBookInLibraryCard(libraryCard);
             return Ok(personBooks);
         }
     }

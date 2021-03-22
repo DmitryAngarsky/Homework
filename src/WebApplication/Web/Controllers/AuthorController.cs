@@ -1,8 +1,6 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Database.UnitOfWork;
+﻿using System.Threading.Tasks;
+using Application;
 using Domain;
-using Domain.DTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApplication.Controllers
@@ -11,23 +9,23 @@ namespace WebApplication.Controllers
     [Route("api/[controller]")]
     public class AuthorController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        public AuthorController(IUnitOfWork unitOfWork)
+        private readonly IAuthorService _authorService;
+        public AuthorController(IAuthorService authorService)
         {
-            _unitOfWork = unitOfWork;
+            _authorService = authorService;
         }
         
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var data = await _unitOfWork.Authors.GetAllAsync();
+            var data = await _authorService.GetAll();
             return Ok(data);
         }
         
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var data = await _unitOfWork.Authors.GetByIdAsync(id);
+            var data = await _authorService.GetById(id);
             
             if (data == null) 
                 return NotFound("Author not found");
@@ -38,23 +36,18 @@ namespace WebApplication.Controllers
         [HttpGet("{id}/books")]
         public async Task<IActionResult> GetAllWithBooks(int id)
         {
-            var author = await _unitOfWork.Authors.GetByIdAsync(id);
+            var author = await _authorService.GetAllWithBooks(id);
+            
             if (author == null)
                 return NotFound("Author not found");
-            
-            var resultAuthorBooks = new AuthorBooks
-            {
-                Author = author,
-                Books = await _unitOfWork.Authors.GetAllAuthorsBookAsync(id)
-            };
 
-            return Ok(resultAuthorBooks);
+            return Ok(author);
         }
         
         [HttpPost]
-        public async Task<ActionResult> Add(Author author)
+        public async Task<ActionResult> Add(AuthorModel author)
         {
-            var data = await _unitOfWork.Authors.AddAsync(author);
+            var data = await _authorService.Add(author);
             return Ok(data);
         }
         
@@ -63,32 +56,19 @@ namespace WebApplication.Controllers
         {
             if (authorBooksCollection == null)
                 return BadRequest();
-            
-            var author = await _unitOfWork.Authors.AddAsync(authorBooksCollection.Author);
 
-            foreach (var book in authorBooksCollection.Books)
-                book.AuthorId = author.Id;
-            
-            if(authorBooksCollection.Books.Any()) 
-                await _unitOfWork.Books.AddRangeAsync(authorBooksCollection.Books);
+            var result = await _authorService.AddWithBooks(authorBooksCollection);
 
-            authorBooksCollection.Author = author;
-            authorBooksCollection.Books = await _unitOfWork.Books
-                .GetAllAuthorBooksAsync(author.Id);
-            
-            return Ok(authorBooksCollection);
+            return Ok(result);
         }
-
+        
+        //TODO: Добавить обработку ошибок и возвратить результать.
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var authorBooks = await _unitOfWork.Books.GetAllAuthorBooksAsync(id);
-
-            if (authorBooks.Any())
-                return BadRequest("Author has books");
-
-            var data = await _unitOfWork.Authors.DeleteAsync(id);
-            return Ok(data);
+            await _authorService.Delete(id);
+            
+            return Ok();
         }
     }
 }

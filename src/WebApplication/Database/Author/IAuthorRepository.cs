@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Database;
 using Domain;
-using Domain.DTO;
 
 namespace WebApplication.Database
 {
-    public interface IAuthorRepository : IGenericRepository<Author>
+    public interface IAuthorRepository
     {
-        Task<List<AuthorBook>> GetAllAuthorsBookAsync(int authorId);
-        Task<IEnumerable<Author>> GetAllAuthorsAsync(Author author);
+        IQueryable<Author> GetAll();
+        IQueryable<Author> GetAllWithBooks();
+        Task<Author> GetByIdAsync(int authorId);
+        Task<Author> AddAsync(Author author);
+        Task DeleteAsync(int authorId);
+        
     }
 }

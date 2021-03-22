@@ -1,17 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Database;
 using Domain;
 using Domain.DTO;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApplication
 {
-    public interface IBookRepository : IGenericRepository<Book>
+    public interface IBookRepository
     {
-        Task<IReadOnlyList<Book>> GetAllAuthorBooksAsync(int authorId);
-        Task<int> AddRangeAsync(IEnumerable<Book> books);
-        Task<IEnumerable<PersonBook>> GetAllGenreBooksAsync(int id);
-        Task<IEnumerable<LibraryCard>> GetBookLibraryCardsAsync(int id);
-        Task<IEnumerable<Book>> GetAllAuthorsBooksAsync(int[] idArray);
+        IQueryable<Book> GetAll();
+        Task<Book> GetByIdAsync(int bookId);
+        IQueryable<Book> GetAllWithGenre();
+        Task AddRangeAsync(IEnumerable<Book> books);
+        void Delete(int bookId);
     }
 }

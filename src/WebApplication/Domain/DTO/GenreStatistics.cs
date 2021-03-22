@@ -3,6 +3,6 @@
     public class GenreStatistics
     {
         public int BooksCount { get; set; }
-        public Genre Genre { get; set; }
+        public GenreModel Genre { get; set; }
     }
 }

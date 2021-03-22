@@ -1,39 +1,49 @@
-﻿using System.Data.SqlClient;
-using Dapper;
+﻿using System;
+using Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApplication.Database
 {
     public static class SeedData
     {
-        public static async void Seed()
+        public static void Seed(this ModelBuilder builder)
         {
-            await using (var connection = new SqlConnection())
-            {
-                connection.ConnectionString = "Data Source=.\\SQLEXPRESS;Initial Catalog=Library_Application;Integrated Security=True;";
-                connection.Open();
-                
-                var persons = @"INSERT INTO Persons (FirstName, LastName, MiddleName, BirthDate)
-                                VALUES ('Dmitry', 'Angarsky', 'Aleksandrovich', '18-06-12 10:34:09 AM'),
-                                       ('Sam', 'Robert', 'Jhonhson', '18-06-12 10:34:09 AM'),
-                                       ('Pedro', 'Sanches', 'Rodrigo', '18-06-12 10:34:09 AM')";
-                
-                var authors = @"INSERT INTO Authors (FirstName, LastName, MiddleName)
-                                VALUES ('Agatha', 'Mary', 'Clarissa'),
-                                       ('Danielle', 'Fernandes', 'Steel'),
-                                       ('Joanne', 'Robert', 'Rowling')";
-                
-                var books = @"INSERT INTO Books (Name, AuthorId)
-                                VALUES ('The Lord of the Rings', 1),
-                                       ('The Great Gatsby', 2),
-                                       ('1984', 3)";
-                
-                var genres = @"INSERT INTO Genres (GenreName)
-                                VALUES ('Adventure'),
-                                       ('Alternate history'),
-                                       ('Biography')";
+            SeedAuthors(builder);
+            SeedBooks(builder);
+            SeedGenres(builder);
+            SeedPersons(builder);
+        }
 
-                await connection.QueryMultipleAsync(string.Join(";", persons, authors, genres, books));
-            }
+        private static void SeedAuthors(this ModelBuilder builder)
+        {
+            builder.Entity<Author>().HasData(
+                new Author {Id = 1, FirstName = "Agatha", LastName = "Mary", MiddleName = "Clarissa"},
+                new Author {Id = 2, FirstName = "Danielle", LastName = "Fernandes", MiddleName = "Steel"},
+                new Author {Id = 3, FirstName = "Joanne", LastName = "Robert", MiddleName = "Rowling"});
+        }
+        
+        private static void SeedBooks(this ModelBuilder builder)
+        {
+            builder.Entity<Book>().HasData(
+                new Book {Id = 1, Name = "The Lord of the Rings", AuthorId = 1},
+                new Book {Id = 2, Name = "The Great Gatsby", AuthorId = 2},
+                new Book {Id = 3, Name = "1984", AuthorId = 3});
+        }
+        
+        private static void SeedGenres(this ModelBuilder builder)
+        {
+            builder.Entity<Genre>().HasData(
+                new Genre {Id = 1, GenreName = "Adventure"},
+                new Genre {Id = 2, GenreName = "Alternate history"},
+                new Genre {Id = 3, GenreName = "Biography"});
+        }
+        
+        private static void SeedPersons(this ModelBuilder builder)
+        {
+            builder.Entity<Person>().HasData(
+                new Person {Id = 1, FirstName = "Dmitry", LastName = "Angarsky", MiddleName = "Aleksandrovich", BirthDate = DateTime.Now},
+                new Person {Id = 2, FirstName = "Sam", LastName = "Robert", MiddleName = "Jhonhson", BirthDate = DateTime.Now},
+                new Person {Id = 3, FirstName = "Pedro", LastName = "Sanches", MiddleName = "Rodrigo", BirthDate = DateTime.Now});
         }
     }
 }

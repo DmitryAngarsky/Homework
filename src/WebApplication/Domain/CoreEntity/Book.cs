@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Domain
 {
@@ -11,5 +12,8 @@ namespace Domain
         
         [Required(ErrorMessage = "Author is required.")]
         public int AuthorId { get; set; }
+
+        public List<Genre> Genres { get; set; } = new List<Genre>();
+        public List<Person> Persons { get; set; } = new List<Person>();
     }
 }
