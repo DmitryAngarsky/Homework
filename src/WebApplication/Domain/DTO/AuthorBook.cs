@@ -4,12 +4,9 @@ namespace Domain.DTO
 {
     public class AuthorBook
     {
-        public AuthorBook()
-        {
-            Genres = new List<Genre>();
-        }
-
-        public Book Book { get; set; }
-        public List<Genre> Genres { get; set; }
+        public int Id { get; set; }
+        
+        public string Name { get; set; }
+        public List<GenreModel> Genres { get; set; } = new List<GenreModel>();
     }
 }

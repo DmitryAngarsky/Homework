@@ -1,15 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Domain.DTO
 {
     public class PersonBooks
     {
-        public PersonBooks()
-        {
-            Books = new List<Book>();
-        }
-
-        public Person Person { get; set; }
-        public List<Book> Books { get; set; }
+        public int Id { get; set; }
+        
+        public string FirstName { get; set; }
+        
+        public string LastName { get; set; }
+        
+        public string MiddleName { get; set; }
+        
+        public DateTime BirthDate { get; set; }
+        
+        public List<BookModel> Books { get; set; } = new List<BookModel>();
     }
 }

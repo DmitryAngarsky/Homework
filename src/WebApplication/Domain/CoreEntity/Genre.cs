@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Domain
 {
@@ -8,5 +9,7 @@ namespace Domain
         
         [Required(ErrorMessage = "GenreName is required.")]
         public string GenreName { get; set; }
+        
+        public List<Book> Books { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -20,5 +21,7 @@ namespace Domain
         [Required(ErrorMessage = "Date of Birth is required.")]
         // [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public DateTime BirthDate { get; set; }
+
+        public List<Book> Books { get; set; } = new List<Book>();
     }
 }

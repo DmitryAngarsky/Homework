@@ -1,172 +1,62 @@
 ﻿using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
+using Database;
 using Domain;
-using Domain.DTO;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApplication
 {
     public class BookRepository : IBookRepository
     {
-        private readonly IConfiguration _configuration;
+        private readonly Context _context;
 
-        public BookRepository(IConfiguration configuration)
+        public BookRepository(Context context)
         {
-            _configuration = configuration;
+            _context = context;
+        }
+
+        public IQueryable<Book> GetAll()
+        {
+            return _context.Books
+                .AsQueryable();
         }
         
-        public Task<Book> GetByIdAsync(int id)
+        public async Task<Book> GetByIdAsync(int bookId)
         {
-            throw new System.NotImplementedException();
-        }
-
-        public async Task<IReadOnlyList<Book>> GetAllAsync()
-        {
-            string query = "SELECT * FROM Books";
-            
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                connection.Open();
-                var result = await connection.QueryAsync<Book>(query);
-                return result.ToList();
-            }
+            return await _context.Books
+                .SingleOrDefaultAsync(a => a.Id == bookId);
         }
         
-        public async Task<IEnumerable<PersonBook>> GetAllGenreBooksAsync(int genreId)
+        public IQueryable<Book> GetAllWithGenre()
         {
-            const string query = @"SELECT *
-                                   FROM Library_Card
-                                   INNER JOIN Books ON Library_Card.BookId = Books.Id
-                                   INNER JOIN Authors ON Books.AuthorId = Authors.Id
-                                   INNER JOIN Book_Genre_lnk ON Books.Id = Book_Genre_lnk.BookId
-                                   WHERE GenreId = @GenreId";
-
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await connection.OpenAsync();
-                var resultGenreBooks = await connection
-                    .QueryAsync<PersonBook, Book, Author, PersonBook>(
-                        query,
-                        (genreBooks, book, author) =>
-                        {
-                            genreBooks.Book = book;
-                            genreBooks.Author = author;
-
-                            return genreBooks;
-                        },
-                        new {GenreId = genreId},
-                        splitOn: "PersonId,Id");
-
-                var allGenreBooks = resultGenreBooks.ToList();
-
-                const string genreQuery = @"SELECT Id, GenreName FROM Book_Genre_lnk
-                                            INNER JOIN Genres ON Book_Genre_lnk.GenreId = Genres.Id
-                                            WHERE BookId = @BookId";
-
-                foreach (var genreBook in allGenreBooks)
-                {
-                    var bookId = genreBook.Book.Id;
-                    var genres = await connection
-                        .QueryAsync<Genre>(genreQuery, new {BookId = bookId});
-
-                    genreBook.Genre = new List<Genre>();
-                    genreBook.Genre.AddRange(genres);
-                }
-
-                return allGenreBooks;
-            }
-        }
-
-        public async Task<IReadOnlyList<Book>> GetAllAuthorBooksAsync(int authorId)
-        {
-            string query = @"SELECT * FROM Books 
-                             WHERE AuthorId = @AuthorId";
-            
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await connection.OpenAsync();
-                var result = await connection
-                    .QueryAsync<Book>(query, new { AuthorId = authorId });
-                
-                return result.ToList();
-            }
-        }
-        
-        public async Task<IEnumerable<LibraryCard>> GetBookLibraryCardsAsync(int id)
-        {
-            var query = @"Select * FROM Library_Card 
-                          WHERE BookId = @Id";
-
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await connection.OpenAsync();
-                var result = await connection
-                    .QueryAsync<LibraryCard>(query, new { Id = id });
-                
-                return result;
-            }
-        }
-        
-        public async Task<IEnumerable<Book>> GetAllAuthorsBooksAsync(int[] idArray)
-        {
-            var query = string.Format(@"SELECT * FROM Authors 
-                                             INNER JOIN Books on Authors.Id = Books.AuthorId 
-                                             WHERE AuthorId in ({0})", string.Join(", ", idArray));
-
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await connection.OpenAsync();
-                var authorBooks = await connection
-                    .QueryAsync<Book>(
-                        query);
-                return authorBooks;
-            }
+            return _context.Books
+                .Include(b => b.Genres)
+                .AsQueryable();
         }
 
         public async Task<Book> AddAsync(Book book)
         {
-            string query = "INSERT INTO Books (Name, AuthorId) VALUES (@Name, @AuthorId)";
+            var newBook = await _context.Books
+                .AddAsync(book);
             
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                connection.Open();
-                var result = await connection.QuerySingleOrDefaultAsync<Book>(query, book);
-                return result;
-            }
+            return newBook.Entity;
         }
 
-        public Task<Book> UpdateAsync(Book entity)
+        public Task AddRangeAsync(IEnumerable<Book> books)
         {
-            throw new System.NotImplementedException();
+            return _context.Books.AddRangeAsync(books);
         }
-
-        public async Task<int> AddRangeAsync(IEnumerable<Book> books)
+        
+        public void Delete(int bookId)
         {
-            string query = "INSERT INTO Books (Name, AuthorId) VALUES (@Name, @AuthorId)";
+            var book = _context.Books.Find(bookId);
             
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                connection.Open();
-                var result = await connection.ExecuteAsync(query, books);
-                return result;
-            }
-        }
+            if (book is null) 
+                return;
 
-        public async Task<int> DeleteAsync(int id)
-        {
-            var query = @"DELETE FROM Books 
-                          WHERE Id = @Id";
-
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await connection.OpenAsync();
-                var result = await connection.ExecuteAsync(query, new { Id = id });
-                
-                return result;
-            }
+            _context.Books.Remove(book);
+            _context.SaveChanges();
         }
     }
 }

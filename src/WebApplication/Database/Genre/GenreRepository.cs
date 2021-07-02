@@ -1,84 +1,39 @@
-﻿using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
+using Database;
 using Domain;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApplication.Database
 {
     public class GenreRepository : IGenreRepository
     {
-        private readonly IConfiguration _configuration;
+        private readonly Context _context;
 
-        public GenreRepository(IConfiguration configuration)
+        public GenreRepository(Context context)
         {
-            _configuration = configuration;
-        }
-        
-        public Task<Genre> GetByIdAsync(int id)
-        {
-            throw new System.NotImplementedException();
+            _context = context;
         }
 
-        public async Task<IReadOnlyList<Genre>> GetAllAsync()
+
+        public IQueryable<Genre> GetAll()
         {
-            string query = "SELECT * FROM Genres";
-            
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await connection.OpenAsync();
-                var result = await connection.QueryAsync<Genre>(query);
-                return result.ToList();
-            }
+            return _context.Genres
+                .AsQueryable();
+        }
+
+        public IQueryable<Genre> GetAllWithBooks()
+        {
+            return _context.Genres
+                .Include(g => g.Books);
         }
 
         public async Task<Genre> AddAsync(Genre genre)
         {
-            string query = @"INSERT INTO Genres (GenreName) 
-                             OUTPUT INSERTED.* 
-                             VALUES (@GenreName)";
-            
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await connection.OpenAsync();
-                var result = await connection.QuerySingleOrDefaultAsync<Genre>(query, genre);
-                return result;
-            }
-        }
-        
-        public async Task<IEnumerable<GenreStatistics>> GetStatistics()
-        {
-            const string query = @"SELECT COUNT(GenreId) AS BooksCount, Id, GenreName 
-                                   FROM Book_Genre_lnk 
-                                   INNER JOIN Genres ON Book_Genre_lnk.GenreId = Genres.Id 
-                                   GROUP BY Id, GenreName";
+            var newGenre = await _context.Genres
+                .AddAsync(genre);
 
-            await using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
-            {
-                await connection.OpenAsync();
-                var result = await connection
-                    .QueryAsync<GenreStatistics, Genre, GenreStatistics>(query, MapResults, splitOn: "Id");
-                
-                return result;
-            }
-        }
-
-        private GenreStatistics MapResults(GenreStatistics genreStatistics, Genre genre)
-        {
-            genreStatistics.Genre = genre;
-            return genreStatistics;
-        }
-
-        public Task<Genre> UpdateAsync(Genre genre)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task<int> DeleteAsync(int id)
-        {
-            throw new System.NotImplementedException();
+            return newGenre.Entity;
         }
     }
 }

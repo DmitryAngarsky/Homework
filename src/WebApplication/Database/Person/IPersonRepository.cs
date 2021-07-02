@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Database;
 using Domain;
@@ -6,13 +7,17 @@ using Domain.DTO;
 
 namespace WebApplication
 {
-    public interface IPersonRepository : IGenericRepository<Person>
+    public interface IPersonRepository
     {
-        Task<int> DeleteByNameAsync(Person person);
-        Task<IEnumerable<PersonBook>> GetAllPersonBooksAsync(int id);
-        Task<LibraryCard> GetLibraryCard(LibraryCard libraryCard);
-        Task<int> AddBookInLibraryCard(LibraryCard libraryCard);
-        Task<int> DeleteBookInLibraryCard(LibraryCard libraryCard);
-        Task<PersonBooks> GetPersonBooks(int personId);
+        Task<Person> GetByIdAsync(int personId);
+        public IQueryable<Person> GetAllWithBooks();
+        Task<Person> AddAsync(Person person);
+        void AddPersonBook(LibraryCard libraryCard);
+        void DeletePersonBook(LibraryCard libraryCard);
+        Person Update(Person person);
+
+        void Delete(int personId);
+        // Task<int> DeleteByNameAsync(Person person);
+        // Task<IEnumerable<PersonBook>> GetAllPersonBooksAsync(int id);
     }
 }

@@ -1,64 +1,41 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Database.UnitOfWork;
+﻿using System.Threading.Tasks;
+using Application;
 using Domain;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApplication.Controllers
 {
+    //TODO: Добавить PUT и POST.
     [ApiController]
     [Route("api/[controller]")]
     public class BookController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        public BookController(IUnitOfWork unitOfWork)
+        private readonly IBookService _bookService;
+        public BookController(IBookService bookService)
         {
-            _unitOfWork = unitOfWork;
+            _bookService = bookService;
         }
         
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var data = await _unitOfWork.Books.GetAllAsync();
-            return Ok(data);
-        }
         
         [HttpPost("books")]
-        public async Task<IActionResult> GetAuthorBooks(Author author)
+        public async Task<IActionResult> GetAuthorBooks(AuthorModel author)
         {
-            var authors = await _unitOfWork.Authors.GetAllAuthorsAsync(author);
-            int[] authorsId = authors.Select(a => a.Id).ToArray();
-            var personBooks = await _unitOfWork.Books.GetAllAuthorsBooksAsync(authorsId);
-            return Ok(personBooks);
+            var books = await _bookService.GetAuthorBooks(author);
+            return Ok(books);
         }
 
         [HttpGet("genre_books/{id}")]
         public async Task<IActionResult> GetGenreBooks(int id)
         {
-            var personBooks = await _unitOfWork.Books.GetAllGenreBooksAsync(id);
+            var personBooks = await _bookService.GetGenreBooks(id);
             return Ok(personBooks);
         }
-
-        [HttpPost]
-        public async Task<ActionResult> Add(Book book)
-        {
-            var data = await _unitOfWork.Books.AddAsync(book);
-            return Ok(data);
-        }
-
+        
+        //TODO: Добавить обработку ошибок и возвратить результать.
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
-            var bookLibraryCards = await _unitOfWork.Books.GetBookLibraryCardsAsync(id);
-
-            if (bookLibraryCards.Any())
-                return BadRequest("Person have book");
-            
-            var deletedRows = await _unitOfWork.Books.DeleteAsync(id);
-            
-            if (deletedRows == 0)
-                return NotFound("Person no found");
-            
+            _bookService.Delete(id);
             return Ok();
         }
     }
